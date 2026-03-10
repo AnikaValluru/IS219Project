@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # project_sample — Node.js static server
 
 This folder contains a small static site (HTML/CSS/JS). I've added a minimal Node.js + Express server so you can run the site locally with Node.
