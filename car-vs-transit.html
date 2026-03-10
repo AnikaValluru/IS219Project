@@ -96,9 +96,45 @@
 
       <div id="compareResults" class="results hidden mt-3">
         <h4>Annual comparison</h4>
-        <ul id="compareBreakdown"></ul>
-        <div id="compareWinner" class="total"></div>
-        <div id="compareBudgetImpact" class="legend-note"></div>
+        <div class="table-responsive">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Car</th>
+                <th>Transit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Annual transportation cost</td>
+                <td id="tblCarCost">—</td>
+                <td id="tblTransitCost">—</td>
+              </tr>
+              <tr>
+                <td>Annual savings vs the other option</td>
+                <td id="tblCarSaving">—</td>
+                <td id="tblTransitSaving">—</td>
+              </tr>
+              <tr>
+                <td>Cost as % of annual income</td>
+                <td id="tblCarPct">—</td>
+                <td id="tblTransitPct">—</td>
+              </tr>
+              <tr>
+                <td>Estimated yearly commute time</td>
+                <td id="tblCarTime">—</td>
+                <td id="tblTransitTime">—</td>
+              </tr>
+              <tr>
+                <td>Budget remainder after essentials</td>
+                <td id="tblCarRemainder">—</td>
+                <td id="tblTransitRemainder">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="compareWinner" class="total mt-2"></div>
       </div>
     </section>
   </main>

@@ -463,34 +463,42 @@ document.addEventListener('DOMContentLoaded',()=>{
       const annualEssentials = monthlyEssentials * 12;
 
       const results = document.getElementById('compareResults');
-      const list = document.getElementById('compareBreakdown');
       const winner = document.getElementById('compareWinner');
-      const budgetImpact = document.getElementById('compareBudgetImpact');
       const currencyByLocationLocal = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
       const cur = currencyByLocationLocal[location] || 'USD';
 
-      list.innerHTML = '';
-      [
-        `Estimated annual car ownership cost: ${cur} ${carCost.toLocaleString()}`,
-        `Estimated annual transit + rideshare cost: ${cur} ${transitAnnual.toLocaleString()}`,
-        `Annual cost difference: ${cur} ${Math.abs(carCost - transitAnnual).toLocaleString()}`,
-        `Estimated yearly commute time (car): ${carHours.toFixed(0)} hours`,
-        `Estimated yearly commute time (transit): ${transitHours.toFixed(0)} hours`
-      ].forEach((line)=>{
-        const li = document.createElement('li');
-        li.textContent = line;
-        list.appendChild(li);
+      const diff = Math.abs(carCost - transitAnnual);
+      const carIsCheaper = carCost <= transitAnnual;
+      const annualIncomeFull = monthlyIncome * 12;
+      const carPct = annualIncomeFull > 0 ? (carCost / annualIncomeFull * 100).toFixed(1) + '%' : 'N/A';
+      const transitPct = annualIncomeFull > 0 ? (transitAnnual / annualIncomeFull * 100).toFixed(1) + '%' : 'N/A';
+      const postCar = annualIncome - annualEssentials - carCost;
+      const postTransit = annualIncome - annualEssentials - transitAnnual;
+
+      // populate table cells
+      document.getElementById('tblCarCost').textContent = `${cur} ${carCost.toLocaleString()}`;
+      document.getElementById('tblTransitCost').textContent = `${cur} ${transitAnnual.toLocaleString()}`;
+      document.getElementById('tblCarSaving').textContent = carIsCheaper ? `${cur} ${diff.toLocaleString()} cheaper` : '—';
+      document.getElementById('tblTransitSaving').textContent = !carIsCheaper ? `${cur} ${diff.toLocaleString()} cheaper` : '—';
+      document.getElementById('tblCarPct').textContent = carPct;
+      document.getElementById('tblTransitPct').textContent = transitPct;
+      document.getElementById('tblCarTime').textContent = `${carHours.toFixed(0)} hrs/yr`;
+      document.getElementById('tblTransitTime').textContent = `${transitHours.toFixed(0)} hrs/yr`;
+      document.getElementById('tblCarRemainder').textContent = `${cur} ${postCar.toLocaleString()}`;
+      document.getElementById('tblTransitRemainder').textContent = `${cur} ${postTransit.toLocaleString()}`;
+
+      // clear previous highlights, then highlight winning column
+      document.querySelectorAll('.compare-table .col-winner').forEach(el=>el.classList.remove('col-winner'));
+      const winnerCol = carIsCheaper ? 2 : 3;
+      document.querySelectorAll('.compare-table tbody tr').forEach(row=>{
+        row.querySelector(`td:nth-child(${winnerCol})`).classList.add('col-winner');
       });
 
-      if(carCost <= transitAnnual){
+      if(carIsCheaper){
         winner.textContent = 'Result: Car ownership is projected to be cheaper annually in this scenario.';
       } else {
         winner.textContent = 'Result: Transit is projected to be cheaper annually in this scenario.';
       }
-
-      const postCar = annualIncome - annualEssentials - carCost;
-      const postTransit = annualIncome - annualEssentials - transitAnnual;
-      budgetImpact.textContent = `After essentials, projected annual remainder with car: ${cur} ${postCar.toLocaleString()} | with transit: ${cur} ${postTransit.toLocaleString()}`;
 
       results.classList.remove('hidden');
     });

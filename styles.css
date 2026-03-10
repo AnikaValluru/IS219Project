@@ -211,6 +211,38 @@ button:hover,
   margin:0 auto;
 }
 
+/* Car vs Transit comparison table */
+.compare-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.95rem;
+  margin-top:8px;
+}
+.compare-table thead tr{
+  background:var(--accent);
+  color:#fff;
+}
+.compare-table th,
+.compare-table td{
+  padding:11px 16px;
+  text-align:left;
+  border-bottom:1px solid var(--line);
+}
+.compare-table thead th:not(:first-child){
+  text-align:center;
+}
+.compare-table tbody td:not(:first-child){
+  text-align:center;
+  font-weight:600;
+}
+.compare-table tbody tr:hover{
+  background:rgba(217,0,27,.04);
+}
+.compare-table .col-winner{
+  background:rgba(34,197,94,.12);
+  color:#166534;
+}
+
 .tip-card{
   border:none;
   min-height:230px;
