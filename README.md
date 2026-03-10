@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # project_sample — Node.js static server
 
 This folder contains a small static site (HTML/CSS/JS). I've added a minimal Node.js + Express server so you can run the site locally with Node.
@@ -47,3 +48,6 @@ Next steps / Improvements
 Notes
 
 This project is illustrative and not financial advice. For purchase decisions, consult official sources and financial advisors.
+=======
+# IS219
+>>>>>>> 4cca3fd67e51405340c617847026c882bea62de3
