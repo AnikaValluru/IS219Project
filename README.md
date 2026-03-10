@@ -73,12 +73,14 @@ R — Result: What you expect the data to show; what metric you’ll report
 - The analysis is expected to show that the total cost of car ownership has increased faster than income growth, making car ownership a larger percentage of income than in previous years. The key metric reported will be the percentage of annual income required to own and operate a car. This metric will help determine whether car ownership is financially manageable for students and early-career workers in 2026.
 
 Dataset & Provenance (source links + retrieval date + license/usage)
-- https://www.bts.gov/content/average-cost-owning-and-operating-automobilea-assuming-15000-vehicle-miles-year	
+- https://www.bts.gov/content/average-cost-owning-and-operating-automobilea-assuming-15000-vehicle-miles-year
 
 Data Dictionary (minimum 5 rows: column → meaning → units)
-- 
+-  Car data
+
 Data Viability Audit
-- 
+-  Data accuracy
+
 Missing values + weird fields
 - Can’t prove is car is worth buying based on the landscape (urban vs suburban vs rural) and location (proximity to public transportation)
 -  does not take income into account
