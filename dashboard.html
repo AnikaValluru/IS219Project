@@ -17,6 +17,8 @@
         <a href="index.html">Home</a>
         <a href="dashboard.html">Data Dashboard</a>
         <a href="calculator.html">Cost Calculator</a>
+        <a href="car-vs-transit.html">Car vs Transit</a>
+        <a href="budget-planner.html">Budget Planner</a>
         <a href="alternatives.html">Alternatives</a>
         <a href="tips.html">Actionable Tips</a>
       </nav>
@@ -26,9 +28,60 @@
   <main>
     <section class="container panel">
       <h3>🔹 Data Dashboard</h3>
-      <p class="muted">Trends: total annual cost of car ownership vs median wages. Use the chart to explore components and overall affordability.</p>
+      <p class="muted">Trends: total annual cost of car ownership vs median wages, plus student affordability pressure and cost component mix.</p>
+
+      <div class="row dashboard-filters mb-4">
+        <label>Region
+          <select id="dashRegion">
+            <option value="us" selected>United States</option>
+            <option value="eu">European Union (avg)</option>
+            <option value="ch">Switzerland</option>
+          </select>
+        </label>
+        <label>Student profile
+          <select id="dashProfile">
+            <option value="average" selected>Average student</option>
+            <option value="frugal">Frugal student</option>
+            <option value="commuter">High-commute student</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="alt-grid mb-4" id="kpiGrid">
+        <article>
+          <h4>Latest annual ownership cost</h4>
+          <p id="kpiLatestCost" class="cost">-</p>
+          <p class="muted">Estimated from loan, insurance, energy, and maintenance.</p>
+        </article>
+        <article>
+          <h4>Cost growth since 2016</h4>
+          <p id="kpiGrowth" class="cost">-</p>
+          <p class="muted">Percent change in annual ownership cost over the sample period.</p>
+        </article>
+        <article>
+          <h4>Cost as share of median wage</h4>
+          <p id="kpiBurden" class="cost">-</p>
+          <p class="muted">How much of yearly median income the latest annual car cost consumes.</p>
+        </article>
+        <article>
+          <h4>1-year cost change</h4>
+          <p id="kpiYoY" class="cost">-</p>
+          <p class="muted">Change from previous year in total ownership cost.</p>
+        </article>
+      </div>
+
+      <h4>Main trend</h4>
       <canvas id="costChart" height="120"></canvas>
-      <div class="legend-note">Note: sample data for demonstration; replace with local/national datasets for precise analysis.</div>
+
+      <h4 class="mt-4">Affordability trend</h4>
+      <canvas id="affordabilityChart" height="120"></canvas>
+
+      <h4 class="mt-4">Latest-year cost breakdown</h4>
+      <div class="chart-compact">
+        <canvas id="componentChart" height="90"></canvas>
+      </div>
+
+      <div class="legend-note">Note: sample data for demonstration; replace with local or national datasets for precise analysis and policy decisions.</div>
     </section>
   </main>
 

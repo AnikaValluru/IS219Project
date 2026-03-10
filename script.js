@@ -19,21 +19,134 @@ const modelInfo = {
   ev:      { label: 'Electric',price: 40000, fuel: 18.0, type: 'ev' }
 };
 
-function buildChart(){
-  const ctx = document.getElementById('costChart').getContext('2d');
-  const years = sampleData.years;
-  const totalCost = years.map((_,i)=> sampleData.insurance[i]+sampleData.gas[i]+sampleData.maintenance[i]+ownershipBase[i]);
+const dashboardRegions = {
+  us: { wage: 1.0, insurance: 1.1, fuel: 1.0, maintenance: 1.0, ownership: 1.0 },
+  eu: { wage: 0.9, insurance: 0.8, fuel: 1.15, maintenance: 0.95, ownership: 0.92 },
+  ch: { wage: 1.12, insurance: 0.95, fuel: 1.3, maintenance: 1.05, ownership: 1.08 }
+};
 
-  const chart = new Chart(ctx,{
+const dashboardProfiles = {
+  average: { wage: 1.0, insurance: 1.0, fuel: 1.0, maintenance: 1.0, ownership: 1.0 },
+  frugal: { wage: 0.94, insurance: 0.88, fuel: 0.78, maintenance: 0.85, ownership: 0.8 },
+  commuter: { wage: 1.06, insurance: 1.05, fuel: 1.35, maintenance: 1.18, ownership: 1.12 }
+};
+
+const dashboardCharts = { cost: null, affordability: null, component: null };
+
+function buildDashboardData(regionKey, profileKey){
+  const region = dashboardRegions[regionKey] || dashboardRegions.us;
+  const profile = dashboardProfiles[profileKey] || dashboardProfiles.average;
+  const apply = (arr, key)=> arr.map((v)=> Math.round(v * region[key] * profile[key]));
+
+  const wages = apply(sampleData.wages, 'wage');
+  const insurance = apply(sampleData.insurance, 'insurance');
+  const gas = apply(sampleData.gas, 'fuel');
+  const maintenance = apply(sampleData.maintenance, 'maintenance');
+  const own = apply(ownershipBase, 'ownership');
+  const totalCost = sampleData.years.map((_, i)=> insurance[i] + gas[i] + maintenance[i] + own[i]);
+
+  return { years: sampleData.years, wages, insurance, gas, maintenance, ownershipBase: own, totalCost };
+}
+
+function buildAffordabilityChart(dashboardData){
+  const canvas = document.getElementById('affordabilityChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const burdenPct = dashboardData.totalCost.map((cost, i)=> (cost / dashboardData.wages[i]) * 100);
+
+  if(dashboardCharts.affordability) dashboardCharts.affordability.destroy();
+  dashboardCharts.affordability = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: dashboardData.years,
+      datasets:[
+        {
+          label:'Ownership cost as % of median wage',
+          data: burdenPct,
+          backgroundColor:'rgba(217,0,27,0.22)',
+          borderColor:'#d9001b',
+          borderWidth:1
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      scales:{
+        y:{
+          beginAtZero:true,
+          title:{display:true,text:'Percent of annual wage (%)'}
+        }
+      }
+    }
+  });
+}
+
+function buildComponentChart(dashboardData){
+  const canvas = document.getElementById('componentChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const i = dashboardData.years.length - 1;
+
+  if(dashboardCharts.component) dashboardCharts.component.destroy();
+  dashboardCharts.component = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['Loan/Ownership Base','Insurance','Fuel/Energy','Maintenance'],
+      datasets:[{
+        data:[dashboardData.ownershipBase[i], dashboardData.insurance[i], dashboardData.gas[i], dashboardData.maintenance[i]],
+        backgroundColor:['#b00020','#f97316','#2563eb','#16a34a'],
+        borderColor:'#fffdf9',
+        borderWidth:2
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'bottom'}
+      }
+    }
+  });
+}
+
+function populateDashboardKpis(dashboardData){
+  const latestCostEl = document.getElementById('kpiLatestCost');
+  if(!latestCostEl) return;
+  const growthEl = document.getElementById('kpiGrowth');
+  const burdenEl = document.getElementById('kpiBurden');
+  const yoyEl = document.getElementById('kpiYoY');
+  const totals = dashboardData.totalCost;
+  const first = totals[0];
+  const latest = totals[totals.length - 1];
+  const prev = totals[totals.length - 2];
+  const latestWage = dashboardData.wages[dashboardData.wages.length - 1];
+
+  const growthPct = ((latest - first) / first) * 100;
+  const burdenPct = (latest / latestWage) * 100;
+  const yoyPct = ((latest - prev) / prev) * 100;
+
+  latestCostEl.textContent = `USD ${latest.toLocaleString()}`;
+  growthEl.textContent = `${growthPct.toFixed(1)}%`;
+  burdenEl.textContent = `${burdenPct.toFixed(1)}%`;
+  yoyEl.textContent = `${yoyPct.toFixed(1)}%`;
+}
+
+function renderDashboard(regionKey, profileKey){
+  const dashboardData = buildDashboardData(regionKey, profileKey);
+  const canvas = document.getElementById('costChart');
+  if(!canvas) return;
+
+  if(dashboardCharts.cost) dashboardCharts.cost.destroy();
+  const ctx = canvas.getContext('2d');
+  dashboardCharts.cost = new Chart(ctx, {
     type:'line',
     data:{
-      labels: years,
+      labels: dashboardData.years,
       datasets:[
-  {label:'Median wage (USD)',data:sampleData.wages,borderColor:'#333',backgroundColor:'rgba(0,0,0,0.03)',yAxisID:'y1',tension:0.25},
-  {label:'Total car cost (USD)',data:totalCost,borderColor:'#d9001b',backgroundColor:'rgba(217,0,27,0.08)',fill:true,tension:0.25},
-        {label:'Insurance',data:sampleData.insurance,borderColor:'#ffa07a',backgroundColor:'rgba(255,160,122,0.06)',fill:'+1'},
-        {label:'Gas',data:sampleData.gas,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.06)',fill:'+1'},
-        {label:'Maintenance',data:sampleData.maintenance,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.06)',fill:'+1'}
+        {label:'Median wage (USD)',data:dashboardData.wages,borderColor:'#333',backgroundColor:'rgba(0,0,0,0.03)',yAxisID:'y1',tension:0.25},
+        {label:'Total car cost (USD)',data:dashboardData.totalCost,borderColor:'#d9001b',backgroundColor:'rgba(217,0,27,0.08)',fill:true,tension:0.25},
+        {label:'Insurance',data:dashboardData.insurance,borderColor:'#ffa07a',backgroundColor:'rgba(255,160,122,0.06)',fill:'+1'},
+        {label:'Fuel / Energy',data:dashboardData.gas,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.06)',fill:'+1'},
+        {label:'Maintenance',data:dashboardData.maintenance,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.06)',fill:'+1'}
       ]
     },
     options:{
@@ -46,6 +159,10 @@ function buildChart(){
       }
     }
   });
+
+  buildAffordabilityChart(dashboardData);
+  buildComponentChart(dashboardData);
+  populateDashboardKpis(dashboardData);
 }
 
 // Calculator logic
@@ -73,32 +190,54 @@ function computeAnnualCosts(inputs){
   // insurance base rates (location-adjusted roughly)
   const baseInsurance = {ch:1200,de:900,us:1500,fr:1000}[inputs.location] || 1200;
   const insMultiplier = inputs.insuranceCategory==='low' ? 0.85 : (inputs.insuranceCategory==='high' ? 1.4 : 1.0);
-  const annualInsurance = Math.round(baseInsurance * insMultiplier);
+  const areaInsuranceMultiplier = { urban: 1.15, suburban: 1.0, rural: 0.9 }[inputs.campusArea] || 1.0;
+  const annualInsurance = Math.round(baseInsurance * insMultiplier * areaInsuranceMultiplier);
 
   // fuel / electricity
   let annualFuelCost = 0;
   if(m.type==='gas'){
     const litersPerYear = (m.fuel/100)*kmPerYear;
-    annualFuelCost = litersPerYear * inputs.fuelPrice;
+    const areaFuelMultiplier = { urban: 1.08, suburban: 1.0, rural: 0.95 }[inputs.campusArea] || 1.0;
+    annualFuelCost = litersPerYear * inputs.fuelPrice * areaFuelMultiplier;
   } else {
     const kwhPerYear = (m.fuel/100)*kmPerYear;
     annualFuelCost = kwhPerYear * inputs.fuelPrice; // assume fuelPrice is USD per kWh for EV
   }
+
+  // campus parking/permit cost differs a lot by geography
+  const annualParking = { urban: 1200, suburban: 650, rural: 250 }[inputs.campusArea] || 650;
 
   // maintenance estimate
   let maintenance = Math.max(300, Math.round(0.04 * inputs.price));
   if(inputs.model==='ev') maintenance = Math.max(150, Math.round(0.02 * inputs.price));
 
   // insurance and taxes already included
-  const total = Math.round(annualLoan + annualInsurance + annualFuelCost + maintenance);
+  const total = Math.round(annualLoan + annualInsurance + annualFuelCost + maintenance + annualParking);
 
   return {
     annualLoan: Math.round(annualLoan),
     annualInsurance,
     annualFuel: Math.round(annualFuelCost),
     maintenance,
+    annualParking,
     total
   };
+}
+
+function estimateTransitAnnualCost(inputs){
+  const pass = Math.max(0, inputs.transitPassMonthly * 12);
+  const rideshare = Math.max(0, inputs.rideshareMonthly * 12);
+  return pass + rideshare;
+}
+
+function estimateCommuteTimeHours(inputs){
+  const workDays = 220;
+  const carMinutesByArea = { urban: 38, suburban: 32, rural: 30 };
+  const transitMinutesByArea = { urban: 54, suburban: 68, rural: 82 };
+  const area = inputs.campusArea || 'urban';
+  const carHours = ((carMinutesByArea[area] || 35) * workDays) / 60;
+  const transitHours = ((transitMinutesByArea[area] || 60) * workDays) / 60;
+  return { carHours, transitHours };
 }
 
 // DOM wiring
@@ -112,9 +251,32 @@ document.addEventListener('DOMContentLoaded',()=>{
     const priceEl = document.getElementById('priceCurrency');
     const downEl = document.getElementById('downCurrency');
     const fuelEl = document.getElementById('fuelCurrency');
+    const incomeEl = document.getElementById('incomeCurrency');
+    const essentialsEl = document.getElementById('essentialsCurrency');
     if(priceEl) priceEl.textContent = cur;
     if(downEl) downEl.textContent = cur;
     if(fuelEl) fuelEl.textContent = cur;
+    if(incomeEl) incomeEl.textContent = cur;
+    if(essentialsEl) essentialsEl.textContent = cur;
+
+    // car-vs-transit labels
+    const compareTransitCur = document.getElementById('compareTransitCurrency');
+    const compareRideCur = document.getElementById('compareRideCurrency');
+    const compareIncomeCur = document.getElementById('compareIncomeCurrency');
+    const compareEssentialsCur = document.getElementById('compareEssentialsCurrency');
+    const compareFuelCur = document.getElementById('compareFuelCurrency');
+    if(compareTransitCur) compareTransitCur.textContent = cur;
+    if(compareRideCur) compareRideCur.textContent = cur;
+    if(compareIncomeCur) compareIncomeCur.textContent = cur;
+    if(compareEssentialsCur) compareEssentialsCur.textContent = cur;
+    if(compareFuelCur) compareFuelCur.textContent = cur;
+
+    // budget planner labels
+    ['budgetIncomeCurrency','budgetTransportCurrency','budgetRentCurrency','budgetFoodCurrency','budgetTuitionCurrency','budgetUtilitiesCurrency','budgetOtherCurrency','budgetSavingsCurrency']
+      .forEach((id)=>{
+        const el = document.getElementById(id);
+        if(el) el.textContent = cur;
+      });
     // also update car model option labels to include currency and price
     const carSelect = document.getElementById('carModel');
     if(carSelect){
@@ -142,6 +304,22 @@ document.addEventListener('DOMContentLoaded',()=>{
       updateCurrencyLabels(e.target.value);
     });
   }
+
+  const compareLocation = document.getElementById('compareLocation');
+  if(compareLocation){
+    updateCurrencyLabels(compareLocation.value || 'us');
+    compareLocation.addEventListener('change', (e)=>{
+      updateCurrencyLabels(e.target.value);
+    });
+  }
+
+  const budgetLocation = document.getElementById('budgetLocation');
+  if(budgetLocation){
+    updateCurrencyLabels(budgetLocation.value || 'us');
+    budgetLocation.addEventListener('change', (e)=>{
+      updateCurrencyLabels(e.target.value);
+    });
+  }
   // Highlight the active navigation link based on current filename
   try{
     const navLinks = document.querySelectorAll('.main-nav a');
@@ -158,7 +336,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   }catch(e){/* non-fatal */}
   // build dashboard chart only if the canvas exists on this page
   if(document.getElementById('costChart')){
-    buildChart();
+    const regionSelect = document.getElementById('dashRegion');
+    const profileSelect = document.getElementById('dashProfile');
+    const renderFromFilters = ()=>{
+      const region = regionSelect ? regionSelect.value : 'us';
+      const profile = profileSelect ? profileSelect.value : 'average';
+      renderDashboard(region, profile);
+    };
+
+    renderFromFilters();
+    if(regionSelect) regionSelect.addEventListener('change', renderFromFilters);
+    if(profileSelect) profileSelect.addEventListener('change', renderFromFilters);
   }
 
   // wire calculator only if the calculator button exists on this page
@@ -170,11 +358,14 @@ document.addEventListener('DOMContentLoaded',()=>{
       model: document.getElementById('carModel').value.split(' ')[0],
       commuteKmPerDay: parseFloat(document.getElementById('commute').value) || 0,
       insuranceCategory: document.getElementById('insurance').value,
+      campusArea: document.getElementById('campusArea').value,
       price: parseFloat(document.getElementById('price').value) || 0,
       down: parseFloat(document.getElementById('down').value) || 0,
       term: parseFloat(document.getElementById('term').value) || 5,
       rate: parseFloat(document.getElementById('rate').value) || 0,
-      fuelPrice: parseFloat(document.getElementById('fuelPrice').value) || 1.8
+      fuelPrice: parseFloat(document.getElementById('fuelPrice').value) || 1.8,
+      studentIncomeMonthly: parseFloat(document.getElementById('studentIncome').value) || 0,
+      monthlyEssentials: parseFloat(document.getElementById('monthlyEssentials').value) || 0
     };
 
     // adjust model key parsing: carModel select value may include type label; normalize
@@ -192,18 +383,169 @@ document.addEventListener('DOMContentLoaded',()=>{
     const out = computeAnnualCosts(inputs);
     const results = document.getElementById('results');
     const breakdown = document.getElementById('breakdown');
+    const affordability = document.getElementById('affordability');
+    const verdict = document.getElementById('verdict');
     breakdown.innerHTML = '';
+    affordability.innerHTML = '';
     // choose currency based on selected location
     const currencyByLocationLocal = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
     const cur = currencyByLocationLocal[inputs.location] || 'USD';
-    [['Loan (annual)',out.annualLoan],['Insurance',out.annualInsurance],['Fuel / Energy',out.annualFuel],['Maintenance',out.maintenance]].forEach(([k,v])=>{
+    [['Loan (annual)',out.annualLoan],['Insurance',out.annualInsurance],['Fuel / Energy',out.annualFuel],['Maintenance',out.maintenance],['Parking / permit',out.annualParking]].forEach(([k,v])=>{
       const li = document.createElement('li');
       li.textContent = `${k}: ${cur} ${v.toLocaleString()}`;
       breakdown.appendChild(li);
     });
     document.getElementById('total').textContent = `Estimated total annual cost: ${cur} ${out.total.toLocaleString()}`;
 
+    const annualIncome = Math.max(0, inputs.studentIncomeMonthly * 12);
+    const annualEssentials = Math.max(0, inputs.monthlyEssentials * 12);
+    const discretionary = Math.max(0, annualIncome - annualEssentials);
+    const costVsIncomePct = annualIncome > 0 ? (out.total / annualIncome) * 100 : 0;
+    const costVsDiscretionaryPct = discretionary > 0 ? (out.total / discretionary) * 100 : 0;
+    const postCarRemainder = annualIncome - annualEssentials - out.total;
+
+    [
+      `Annual take-home income: ${cur} ${annualIncome.toLocaleString()}`,
+      `Annual essentials: ${cur} ${annualEssentials.toLocaleString()}`,
+      `Car cost as % of total income: ${costVsIncomePct.toFixed(1)}%`,
+      `Car cost as % of discretionary budget: ${discretionary > 0 ? `${costVsDiscretionaryPct.toFixed(1)}%` : 'N/A'}`,
+      `Money left after essentials + car: ${cur} ${postCarRemainder.toLocaleString()}`
+    ].forEach((line)=>{
+      const li = document.createElement('li');
+      li.textContent = line;
+      affordability.appendChild(li);
+    });
+
+    if(annualIncome === 0){
+      verdict.textContent = 'Add your monthly take-home income for a clearer student affordability verdict.';
+    } else if(postCarRemainder < 0 || costVsIncomePct > 35){
+      verdict.textContent = 'Verdict: likely not worth it right now for a typical student budget. Consider cheaper model choices or alternatives.';
+    } else if(costVsIncomePct > 20){
+      verdict.textContent = 'Verdict: borderline. Ownership may work, but it will consume a large share of your student budget.';
+    } else {
+      verdict.textContent = 'Verdict: more manageable for a student budget, assuming these income and essentials estimates are realistic.';
+    }
+
     results.classList.remove('hidden');
+    });
+  }
+
+  const compareBtn = document.getElementById('compareBtn');
+  if(compareBtn){
+    compareBtn.addEventListener('click',()=>{
+      const location = document.getElementById('compareLocation').value;
+      const campusArea = document.getElementById('compareCampusArea').value;
+      const model = document.getElementById('compareCarModel').value;
+      const commuteKmPerDay = parseFloat(document.getElementById('compareCommute').value) || 0;
+      const transitPassMonthly = parseFloat(document.getElementById('transitPass').value) || 0;
+      const rideshareMonthly = parseFloat(document.getElementById('rideshare').value) || 0;
+      const monthlyIncome = parseFloat(document.getElementById('compareIncome').value) || 0;
+      const monthlyEssentials = parseFloat(document.getElementById('compareEssentials').value) || 0;
+      const fuelPrice = parseFloat(document.getElementById('compareFuelPrice').value) || 1.8;
+
+      const modelPrice = (modelInfo[model] || modelInfo.sedan).price;
+      const carCost = computeAnnualCosts({
+        location,
+        model,
+        commuteKmPerDay,
+        insuranceCategory: 'medium',
+        campusArea,
+        price: modelPrice,
+        down: Math.round(modelPrice * 0.12),
+        term: 5,
+        rate: 5.2,
+        fuelPrice
+      }).total;
+
+      const transitAnnual = Math.round(estimateTransitAnnualCost({ transitPassMonthly, rideshareMonthly }));
+      const { carHours, transitHours } = estimateCommuteTimeHours({ campusArea });
+      const annualIncome = monthlyIncome * 12;
+      const annualEssentials = monthlyEssentials * 12;
+
+      const results = document.getElementById('compareResults');
+      const list = document.getElementById('compareBreakdown');
+      const winner = document.getElementById('compareWinner');
+      const budgetImpact = document.getElementById('compareBudgetImpact');
+      const currencyByLocationLocal = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
+      const cur = currencyByLocationLocal[location] || 'USD';
+
+      list.innerHTML = '';
+      [
+        `Estimated annual car ownership cost: ${cur} ${carCost.toLocaleString()}`,
+        `Estimated annual transit + rideshare cost: ${cur} ${transitAnnual.toLocaleString()}`,
+        `Annual cost difference: ${cur} ${Math.abs(carCost - transitAnnual).toLocaleString()}`,
+        `Estimated yearly commute time (car): ${carHours.toFixed(0)} hours`,
+        `Estimated yearly commute time (transit): ${transitHours.toFixed(0)} hours`
+      ].forEach((line)=>{
+        const li = document.createElement('li');
+        li.textContent = line;
+        list.appendChild(li);
+      });
+
+      if(carCost <= transitAnnual){
+        winner.textContent = 'Result: Car ownership is projected to be cheaper annually in this scenario.';
+      } else {
+        winner.textContent = 'Result: Transit is projected to be cheaper annually in this scenario.';
+      }
+
+      const postCar = annualIncome - annualEssentials - carCost;
+      const postTransit = annualIncome - annualEssentials - transitAnnual;
+      budgetImpact.textContent = `After essentials, projected annual remainder with car: ${cur} ${postCar.toLocaleString()} | with transit: ${cur} ${postTransit.toLocaleString()}`;
+
+      results.classList.remove('hidden');
+    });
+  }
+
+  const budgetBtn = document.getElementById('budgetBtn');
+  if(budgetBtn){
+    budgetBtn.addEventListener('click',()=>{
+      const location = document.getElementById('budgetLocation').value;
+      const income = parseFloat(document.getElementById('budgetIncome').value) || 0;
+      const transport = parseFloat(document.getElementById('budgetTransport').value) || 0;
+      const rent = parseFloat(document.getElementById('budgetRent').value) || 0;
+      const food = parseFloat(document.getElementById('budgetFood').value) || 0;
+      const tuition = parseFloat(document.getElementById('budgetTuition').value) || 0;
+      const utilities = parseFloat(document.getElementById('budgetUtilities').value) || 0;
+      const other = parseFloat(document.getElementById('budgetOther').value) || 0;
+      const savingsGoal = parseFloat(document.getElementById('budgetSavingsGoal').value) || 0;
+
+      const essentials = rent + food + tuition + utilities + other;
+      const totalOut = essentials + transport + savingsGoal;
+      const remainder = income - totalOut;
+      const savingsRate = income > 0 ? (savingsGoal / income) * 100 : 0;
+
+      const currencyByLocationLocal = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
+      const cur = currencyByLocationLocal[location] || 'USD';
+      const results = document.getElementById('budgetResults');
+      const breakdown = document.getElementById('budgetBreakdown');
+      const health = document.getElementById('budgetHealth');
+      const advice = document.getElementById('budgetAdvice');
+
+      breakdown.innerHTML = '';
+      [
+        `Income: ${cur} ${income.toLocaleString()}`,
+        `Total essentials: ${cur} ${essentials.toLocaleString()}`,
+        `Transport budget: ${cur} ${transport.toLocaleString()}`,
+        `Savings goal: ${cur} ${savingsGoal.toLocaleString()} (${savingsRate.toFixed(1)}% of income)`,
+        `Remainder after all planned spending: ${cur} ${remainder.toLocaleString()}`
+      ].forEach((line)=>{
+        const li = document.createElement('li');
+        li.textContent = line;
+        breakdown.appendChild(li);
+      });
+
+      if(remainder < 0){
+        health.textContent = 'Budget health: Deficit';
+        advice.textContent = 'You are over budget. Reduce transport spending or lower non-essential costs before committing to car ownership.';
+      } else if(remainder < 100){
+        health.textContent = 'Budget health: Tight';
+        advice.textContent = 'You can cover costs, but with little buffer. Keep emergency cash and avoid locking into high fixed car expenses.';
+      } else {
+        health.textContent = 'Budget health: Stable';
+        advice.textContent = 'Your budget has some room. You can test higher transport costs and compare if a car still fits without hurting savings.';
+      }
+
+      results.classList.remove('hidden');
     });
   }
 });

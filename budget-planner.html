@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Budget Planner — Is Car Ownership Worth It?</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="brand">Is Car Ownership Worth It? <small>2026</small></h1>
+      <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Data Dashboard</a>
+        <a href="calculator.html">Cost Calculator</a>
+        <a href="car-vs-transit.html">Car vs Transit</a>
+        <a href="budget-planner.html">Budget Planner</a>
+        <a href="alternatives.html">Alternatives</a>
+        <a href="tips.html">Actionable Tips</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container panel">
+      <div class="hero prominent">
+        <div class="hero-inner">
+          <h2 class="display-5">Student Budget Planner</h2>
+          <p class="lead muted">Plan your monthly budget and test whether car ownership, transit, or a custom transport plan leaves you enough financial margin.</p>
+        </div>
+      </div>
+
+      <form id="budgetForm" class="calc-form mt-3">
+        <div class="row">
+          <label>Location
+            <select id="budgetLocation">
+              <option value="ch">Switzerland</option>
+              <option value="de">Germany</option>
+              <option value="us" selected>United States</option>
+              <option value="fr">France</option>
+            </select>
+          </label>
+
+          <label>Monthly take-home income (<span id="budgetIncomeCurrency">USD</span>)
+            <input id="budgetIncome" type="number" min="0" value="1400">
+          </label>
+
+          <label>Monthly transport budget (<span id="budgetTransportCurrency">USD</span>)
+            <input id="budgetTransport" type="number" min="0" value="350">
+          </label>
+        </div>
+
+        <div class="row">
+          <label>Rent / housing (<span id="budgetRentCurrency">USD</span>)
+            <input id="budgetRent" type="number" min="0" value="650">
+          </label>
+
+          <label>Food (<span id="budgetFoodCurrency">USD</span>)
+            <input id="budgetFood" type="number" min="0" value="240">
+          </label>
+
+          <label>Tuition / fees (monthly avg) (<span id="budgetTuitionCurrency">USD</span>)
+            <input id="budgetTuition" type="number" min="0" value="180">
+          </label>
+        </div>
+
+        <div class="row">
+          <label>Phone + utilities (<span id="budgetUtilitiesCurrency">USD</span>)
+            <input id="budgetUtilities" type="number" min="0" value="95">
+          </label>
+
+          <label>Other essentials (<span id="budgetOtherCurrency">USD</span>)
+            <input id="budgetOther" type="number" min="0" value="85">
+          </label>
+
+          <label>Monthly savings goal (<span id="budgetSavingsCurrency">USD</span>)
+            <input id="budgetSavingsGoal" type="number" min="0" value="100">
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="budgetBtn">Analyze budget</button>
+        </div>
+      </form>
+
+      <div id="budgetResults" class="results hidden mt-3">
+        <h4>Monthly budget snapshot</h4>
+        <ul id="budgetBreakdown"></ul>
+        <div id="budgetHealth" class="total"></div>
+        <div id="budgetAdvice" class="legend-note"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>Data and calculations are illustrative. Replace with official datasets for policy or purchase decisions.</small>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -16,6 +16,8 @@
         <a href="index.html">Home</a>
         <a href="dashboard.html">Data Dashboard</a>
         <a href="calculator.html">Cost Calculator</a>
+        <a href="car-vs-transit.html">Car vs Transit</a>
+        <a href="budget-planner.html">Budget Planner</a>
         <a href="alternatives.html">Alternatives</a>
         <a href="tips.html">Actionable Tips</a>
       </nav>
@@ -66,12 +68,30 @@
             </select>
           </label>
 
+          <label>Campus area (geography)
+            <select id="campusArea">
+              <option value="urban" selected>Urban / downtown campus</option>
+              <option value="suburban">Suburban campus</option>
+              <option value="rural">Rural / small town campus</option>
+            </select>
+          </label>
+
           <label>Purchase price (<span id="priceCurrency">USD</span>)
             <input id="price" type="number" value="35000">
           </label>
+        </div>
 
+        <div class="row">
           <label>Down payment (<span id="downCurrency">USD</span>)
             <input id="down" type="number" value="5000">
+          </label>
+
+          <label>Student monthly take-home income (<span id="incomeCurrency">USD</span>)
+            <input id="studentIncome" type="number" min="0" value="1400">
+          </label>
+
+          <label>Monthly essentials (rent, food, tuition) (<span id="essentialsCurrency">USD</span>)
+            <input id="monthlyEssentials" type="number" min="0" value="1000">
           </label>
         </div>
 
@@ -98,6 +118,9 @@
         <h4>Estimated annual cost</h4>
         <ul id="breakdown"></ul>
         <div id="total" class="total"></div>
+        <h5 class="mt-3">Student affordability snapshot</h5>
+        <ul id="affordability"></ul>
+        <div id="verdict" class="legend-note"></div>
       </div>
     </section>
   </main>
