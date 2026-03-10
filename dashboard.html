@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Data Dashboard — Is Car Ownership Worth It?</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="brand">Is Car Ownership Worth It? <small>2026</small></h1>
+      <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Data Dashboard</a>
+        <a href="calculator.html">Cost Calculator</a>
+        <a href="alternatives.html">Alternatives</a>
+        <a href="tips.html">Actionable Tips</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container panel">
+      <h3>🔹 Data Dashboard</h3>
+      <p class="muted">Trends: total annual cost of car ownership vs median wages. Use the chart to explore components and overall affordability.</p>
+      <canvas id="costChart" height="120"></canvas>
+      <div class="legend-note">Note: sample data for demonstration; replace with local/national datasets for precise analysis.</div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>Data and calculations are illustrative. Replace with official datasets for policy or purchase decisions.</small>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

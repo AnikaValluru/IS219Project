@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cost Calculator — Is Car Ownership Worth It?</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="brand">Is Car Ownership Worth It? <small>2026</small></h1>
+      <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Data Dashboard</a>
+        <a href="calculator.html">Cost Calculator</a>
+        <a href="alternatives.html">Alternatives</a>
+        <a href="tips.html">Actionable Tips</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container panel">
+      <div class="hero prominent">
+        <div class="hero-inner">
+          <h2 class="display-5">Cost Calculator</h2>
+          <p class="lead muted">Estimate your annual vehicle costs — including loan repayments, insurance, fuel/energy and maintenance — to compare ownership and alternatives.</p>
+        </div>
+      </div>
+
+      <h3 class="mt-3">🔹 Calculate your annual cost</h3>
+      <form id="calcForm" class="calc-form">
+        <div class="row">
+          <label>Location
+            <select id="location">
+              <option value="ch">Switzerland</option>
+              <option value="de">Germany</option>
+              <option value="us" selected>United States</option>
+              <option value="fr">France</option>
+            </select>
+          </label>
+
+          <label>Car model
+            <select id="carModel">
+              <option value="compact" data-price="20000" data-fuel="6.0">Compact</option>
+              <option value="sedan" data-price="35000" data-fuel="7.5">Sedan</option>
+              <option value="suv" data-price="50000" data-fuel="9.0">SUV</option>
+              <option value="ev" data-price="40000" data-fuel="18">Electric</option>
+            </select>
+          </label>
+
+          <label>Commute distance (km roundtrip per workday)
+            <input id="commute" type="number" min="0" value="20">
+          </label>
+        </div>
+
+        <div class="row">
+          <label>Insurance category
+            <select id="insurance">
+              <option value="low">Low risk</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High risk</option>
+            </select>
+          </label>
+
+          <label>Purchase price (<span id="priceCurrency">USD</span>)
+            <input id="price" type="number" value="35000">
+          </label>
+
+          <label>Down payment (<span id="downCurrency">USD</span>)
+            <input id="down" type="number" value="5000">
+          </label>
+        </div>
+
+        <div class="row">
+          <label>Loan term (years)
+            <input id="term" type="number" min="1" value="5">
+          </label>
+
+          <label>Interest rate (%)
+            <input id="rate" type="number" min="0" step="0.01" value="3.5">
+          </label>
+
+          <label>Fuel price override (per liter <span id="fuelCurrency">USD</span> or kWh price for EV)
+            <input id="fuelPrice" type="number" step="0.01" value="1.80">
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="calcBtn">Calculate annual cost</button>
+        </div>
+      </form>
+
+      <div id="results" class="results hidden">
+        <h4>Estimated annual cost</h4>
+        <ul id="breakdown"></ul>
+        <div id="total" class="total"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>Data and calculations are illustrative. Replace with official datasets for policy or purchase decisions.</small>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
