@@ -57,7 +57,7 @@ Essential Question (1 sentence)
 → Is car ownership still worth it in 2026?
 
 Claim (Hypothesis) (1 sentence; can be wrong)
-→ The cost of buying a car in 2026 is considered financially unfeasible for many 
+- The cost of buying a car in 2026 is considered financially unfeasible for many 
 
 Audience (who is this for?)
 → Any age, those looking to purchase a car/weigh their transportation options
