@@ -271,12 +271,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(compareEssentialsCur) compareEssentialsCur.textContent = cur;
     if(compareFuelCur) compareFuelCur.textContent = cur;
 
-    // budget planner labels
-    ['budgetIncomeCurrency','budgetTransportCurrency','budgetRentCurrency','budgetFoodCurrency','budgetTuitionCurrency','budgetUtilitiesCurrency','budgetOtherCurrency','budgetSavingsCurrency']
-      .forEach((id)=>{
-        const el = document.getElementById(id);
-        if(el) el.textContent = cur;
-      });
     // also update car model option labels to include currency and price
     const carSelect = document.getElementById('carModel');
     if(carSelect){
