@@ -19,10 +19,12 @@ const modelInfo = {
   ev:      { label: 'Electric',price: 40000, fuel: 18.0, type: 'ev' }
 };
 
-const dashboardRegions = {
-  us: { wage: 1.0, insurance: 1.1, fuel: 1.0, maintenance: 1.0, ownership: 1.0 },
-  eu: { wage: 0.9, insurance: 0.8, fuel: 1.15, maintenance: 0.95, ownership: 0.92 },
-  ch: { wage: 1.12, insurance: 0.95, fuel: 1.3, maintenance: 1.05, ownership: 1.08 }
+const dashboardStates = {
+  ca: { wage: 1.12, insurance: 1.14, fuel: 1.2, maintenance: 1.04, ownership: 1.08 },
+  tx: { wage: 0.98, insurance: 1.02, fuel: 0.92, maintenance: 0.96, ownership: 0.97 },
+  ny: { wage: 1.1, insurance: 1.16, fuel: 1.12, maintenance: 1.03, ownership: 1.06 },
+  fl: { wage: 0.95, insurance: 1.22, fuel: 1.0, maintenance: 0.97, ownership: 0.99 },
+  il: { wage: 1.01, insurance: 1.05, fuel: 1.02, maintenance: 0.99, ownership: 1.0 }
 };
 
 const dashboardProfiles = {
@@ -31,12 +33,22 @@ const dashboardProfiles = {
   commuter: { wage: 1.06, insurance: 1.05, fuel: 1.35, maintenance: 1.18, ownership: 1.12 }
 };
 
+const DASHBOARD_MIN_YEAR = 2016;
+const DASHBOARD_MAX_YEAR = 2025;
+
 const dashboardCharts = { cost: null, affordability: null, component: null };
 
-function buildDashboardData(regionKey, profileKey){
-  const region = dashboardRegions[regionKey] || dashboardRegions.us;
+function formatShortNumber(value){
+  const n = Number(value) || 0;
+  if(Math.abs(n) >= 1000000) return `${(n/1000000).toFixed(1)}M`;
+  if(Math.abs(n) >= 1000) return `${(n/1000).toFixed(1)}k`;
+  return `${Math.round(n)}`;
+}
+
+function buildDashboardData(stateKey, profileKey){
+  const state = dashboardStates[stateKey] || dashboardStates.ca;
   const profile = dashboardProfiles[profileKey] || dashboardProfiles.average;
-  const apply = (arr, key)=> arr.map((v)=> Math.round(v * region[key] * profile[key]));
+  const apply = (arr, key)=> arr.map((v)=> Math.round(v * state[key] * profile[key]));
 
   const wages = apply(sampleData.wages, 'wage');
   const insurance = apply(sampleData.insurance, 'insurance');
@@ -46,6 +58,46 @@ function buildDashboardData(regionKey, profileKey){
   const totalCost = sampleData.years.map((_, i)=> insurance[i] + gas[i] + maintenance[i] + own[i]);
 
   return { years: sampleData.years, wages, insurance, gas, maintenance, ownershipBase: own, totalCost };
+}
+
+function clampDashboardYear(value){
+  const n = parseInt(value, 10);
+  if(!Number.isFinite(n)) return DASHBOARD_MIN_YEAR;
+  return Math.max(DASHBOARD_MIN_YEAR, Math.min(DASHBOARD_MAX_YEAR, n));
+}
+
+function buildDashboardViewData(dashboardData, startYear, endYear){
+  let start = clampDashboardYear(startYear);
+  let end = clampDashboardYear(endYear);
+  if(start > end){
+    const t = start;
+    start = end;
+    end = t;
+  }
+
+  const startIdx = dashboardData.years.indexOf(start);
+  const endIdx = dashboardData.years.indexOf(end);
+  if(startIdx < 0 || endIdx < 0){
+    return {
+      data: dashboardData,
+      startYear: DASHBOARD_MIN_YEAR,
+      endYear: DASHBOARD_MAX_YEAR
+    };
+  }
+
+  return {
+    startYear: start,
+    endYear: end,
+    data: {
+      years: dashboardData.years.slice(startIdx, endIdx + 1),
+      wages: dashboardData.wages.slice(startIdx, endIdx + 1),
+      insurance: dashboardData.insurance.slice(startIdx, endIdx + 1),
+      gas: dashboardData.gas.slice(startIdx, endIdx + 1),
+      maintenance: dashboardData.maintenance.slice(startIdx, endIdx + 1),
+      ownershipBase: dashboardData.ownershipBase.slice(startIdx, endIdx + 1),
+      totalCost: dashboardData.totalCost.slice(startIdx, endIdx + 1)
+    }
+  };
 }
 
 function buildAffordabilityChart(dashboardData){
@@ -71,10 +123,24 @@ function buildAffordabilityChart(dashboardData){
     },
     options:{
       responsive:true,
+      plugins:{
+        legend:{labels:{color:'#5f5a57'}},
+        tooltip:{
+          callbacks:{
+            label:(ctx)=> `${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`
+          }
+        }
+      },
       scales:{
         y:{
           beginAtZero:true,
-          title:{display:true,text:'Percent of annual wage (%)'}
+          title:{display:true,text:'Percent of annual wage (%)',color:'#5f5a57'},
+          ticks:{color:'#7b7471', callback:(v)=> `${Number(v).toFixed(0)}%`},
+          grid:{color:'#ece7e3'}
+        },
+        x:{
+          ticks:{color:'#7b7471'},
+          grid:{display:false}
         }
       }
     }
@@ -89,20 +155,38 @@ function buildComponentChart(dashboardData){
 
   if(dashboardCharts.component) dashboardCharts.component.destroy();
   dashboardCharts.component = new Chart(ctx, {
-    type:'doughnut',
+    type:'bar',
     data:{
-      labels:['Loan/Ownership Base','Insurance','Fuel/Energy','Maintenance'],
+      labels:['Loan','Insurance','Fuel','Maintenance'],
       datasets:[{
         data:[dashboardData.ownershipBase[i], dashboardData.insurance[i], dashboardData.gas[i], dashboardData.maintenance[i]],
         backgroundColor:['#b00020','#f97316','#2563eb','#16a34a'],
-        borderColor:'#fffdf9',
-        borderWidth:2
+        borderColor:['#b00020','#f97316','#2563eb','#16a34a'],
+        borderWidth:1,
+        borderRadius:6,
+        maxBarThickness:54
       }]
     },
     options:{
       responsive:true,
       plugins:{
-        legend:{position:'bottom'}
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:(ctx)=> `USD ${Math.round(ctx.raw).toLocaleString()}`
+          }
+        }
+      },
+      scales:{
+        y:{
+          beginAtZero:true,
+          ticks:{color:'#7b7471', callback:(v)=> formatShortNumber(v)},
+          grid:{color:'#ece7e3'}
+        },
+        x:{
+          ticks:{color:'#7b7471'},
+          grid:{display:false}
+        }
       }
     }
   });
@@ -115,14 +199,15 @@ function populateDashboardKpis(dashboardData){
   const burdenEl = document.getElementById('kpiBurden');
   const yoyEl = document.getElementById('kpiYoY');
   const totals = dashboardData.totalCost;
+  if(!totals || !totals.length) return;
   const first = totals[0];
   const latest = totals[totals.length - 1];
-  const prev = totals[totals.length - 2];
+  const prev = totals.length > 1 ? totals[totals.length - 2] : latest;
   const latestWage = dashboardData.wages[dashboardData.wages.length - 1];
 
-  const growthPct = ((latest - first) / first) * 100;
-  const burdenPct = (latest / latestWage) * 100;
-  const yoyPct = ((latest - prev) / prev) * 100;
+  const growthPct = ((latest - first) / Math.max(1, first)) * 100;
+  const burdenPct = (latest / Math.max(1, latestWage)) * 100;
+  const yoyPct = ((latest - prev) / Math.max(1, prev)) * 100;
 
   latestCostEl.textContent = `USD ${latest.toLocaleString()}`;
   growthEl.textContent = `${growthPct.toFixed(1)}%`;
@@ -130,8 +215,10 @@ function populateDashboardKpis(dashboardData){
   yoyEl.textContent = `${yoyPct.toFixed(1)}%`;
 }
 
-function renderDashboard(regionKey, profileKey){
-  const dashboardData = buildDashboardData(regionKey, profileKey);
+function renderDashboard(stateKey, profileKey, startYear, endYear){
+  const dashboardData = buildDashboardData(stateKey, profileKey);
+  const view = buildDashboardViewData(dashboardData, startYear, endYear);
+  const scopedData = view.data;
   const canvas = document.getElementById('costChart');
   if(!canvas) return;
 
@@ -140,29 +227,69 @@ function renderDashboard(regionKey, profileKey){
   dashboardCharts.cost = new Chart(ctx, {
     type:'line',
     data:{
-      labels: dashboardData.years,
+      labels: scopedData.years,
       datasets:[
-        {label:'Median wage (USD)',data:dashboardData.wages,borderColor:'#333',backgroundColor:'rgba(0,0,0,0.03)',yAxisID:'y1',tension:0.25},
-        {label:'Total car cost (USD)',data:dashboardData.totalCost,borderColor:'#d9001b',backgroundColor:'rgba(217,0,27,0.08)',fill:true,tension:0.25},
-        {label:'Insurance',data:dashboardData.insurance,borderColor:'#ffa07a',backgroundColor:'rgba(255,160,122,0.06)',fill:'+1'},
-        {label:'Fuel / Energy',data:dashboardData.gas,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.06)',fill:'+1'},
-        {label:'Maintenance',data:dashboardData.maintenance,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.06)',fill:'+1'}
+        {
+          label:'Car cost (USD)',
+          data:scopedData.totalCost,
+          borderColor:'#d9001b',
+          backgroundColor:'rgba(217,0,27,0.08)',
+          pointBackgroundColor:'#d9001b',
+          pointRadius:(ctx)=> ctx.dataIndex === (ctx.dataset.data.length - 1) ? 4 : 0,
+          pointHoverRadius:4,
+          borderWidth:2.5,
+          tension:0.25
+        },
+        {
+          label:'Median wage (USD)',
+          data:scopedData.wages,
+          borderColor:'#2f4858',
+          backgroundColor:'rgba(47,72,88,0.06)',
+          pointBackgroundColor:'#2f4858',
+          pointRadius:(ctx)=> ctx.dataIndex === (ctx.dataset.data.length - 1) ? 4 : 0,
+          pointHoverRadius:4,
+          borderWidth:2.5,
+          tension:0.25
+        }
       ]
     },
     options:{
       responsive:true,
       interaction:{mode:'index',intersect:false},
-      stacked:false,
+      plugins:{
+        legend:{labels:{color:'#5f5a57'}},
+        tooltip:{
+          callbacks:{
+            label:(ctx)=> `${ctx.dataset.label}: USD ${Math.round(ctx.raw).toLocaleString()}`
+          }
+        }
+      },
       scales:{
-        y:{type:'linear',position:'left',title:{display:true,text:'USD'}},
-        y1:{type:'linear',position:'right',grid:{display:false},title:{display:true,text:'Wage (USD)'}}
+        y:{
+          type:'linear',
+          position:'left',
+          title:{display:true,text:'USD',color:'#5f5a57'},
+          ticks:{color:'#7b7471', callback:(v)=> formatShortNumber(v)},
+          grid:{color:'#ece7e3'}
+        },
+        x:{
+          ticks:{color:'#7b7471'},
+          grid:{display:false}
+        }
       }
     }
   });
 
-  buildAffordabilityChart(dashboardData);
-  buildComponentChart(dashboardData);
-  populateDashboardKpis(dashboardData);
+  buildAffordabilityChart(scopedData);
+  buildComponentChart(scopedData);
+  populateDashboardKpis(scopedData);
+
+  return {
+    state: stateKey,
+    profile: profileKey,
+    startYear: view.startYear,
+    endYear: view.endYear
+  };
 }
 
 // Calculator logic
@@ -175,7 +302,7 @@ function annuityPayment(principal, yearlyRate, years){
 }
 
 function computeAnnualCosts(inputs){
-  // inputs: {location, model, commuteKmPerDay, insuranceCategory, price, down, term, rate, fuelPrice}
+  // inputs: {location(state code), model, commuteKmPerDay, insuranceCategory, price, down, term, rate, fuelPrice}
   const workDays = 220; // rough
   const kmPerYear = inputs.commuteKmPerDay * workDays;
 
@@ -187,8 +314,8 @@ function computeAnnualCosts(inputs){
   const monthly = annuityPayment(loanPrincipal, inputs.rate, inputs.term);
   const annualLoan = monthly*12;
 
-  // insurance base rates (location-adjusted roughly)
-  const baseInsurance = {ch:1200,de:900,us:1500,fr:1000}[inputs.location] || 1200;
+  // insurance base rates (state-adjusted rough baseline)
+  const baseInsurance = {ca:1700,tx:1450,ny:1850,fl:2000,il:1550}[inputs.location] || 1700;
   const insMultiplier = inputs.insuranceCategory==='low' ? 0.85 : (inputs.insuranceCategory==='high' ? 1.4 : 1.0);
   const areaInsuranceMultiplier = { urban: 1.15, suburban: 1.0, rural: 0.9 }[inputs.campusArea] || 1.0;
   const annualInsurance = Math.round(baseInsurance * insMultiplier * areaInsuranceMultiplier);
@@ -242,8 +369,8 @@ function estimateCommuteTimeHours(inputs){
 
 // DOM wiring
 document.addEventListener('DOMContentLoaded',()=>{
-  // Currency map by location
-  const currencyByLocation = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
+  // Currency map by state (all pages are US-only now)
+  const currencyByLocation = { ca: 'USD', tx: 'USD', ny: 'USD', fl: 'USD', il: 'USD' };
 
   // helper to update currency labels in the calculator form
   function updateCurrencyLabels(loc){
@@ -293,7 +420,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const locSelect = document.getElementById('location');
   if(locSelect){
     // initialize labels to current selection
-    updateCurrencyLabels(locSelect.value || 'us');
+    updateCurrencyLabels(locSelect.value || 'ca');
     locSelect.addEventListener('change', (e)=>{
       updateCurrencyLabels(e.target.value);
     });
@@ -301,7 +428,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const compareLocation = document.getElementById('compareLocation');
   if(compareLocation){
-    updateCurrencyLabels(compareLocation.value || 'us');
+    updateCurrencyLabels(compareLocation.value || 'ca');
     compareLocation.addEventListener('change', (e)=>{
       updateCurrencyLabels(e.target.value);
     });
@@ -309,7 +436,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const budgetLocation = document.getElementById('budgetLocation');
   if(budgetLocation){
-    updateCurrencyLabels(budgetLocation.value || 'us');
+    updateCurrencyLabels(budgetLocation.value || 'ca');
     budgetLocation.addEventListener('change', (e)=>{
       updateCurrencyLabels(e.target.value);
     });
@@ -330,23 +457,92 @@ document.addEventListener('DOMContentLoaded',()=>{
   }catch(e){/* non-fatal */}
   // build dashboard chart only if the canvas exists on this page
   if(document.getElementById('costChart')){
-    const regionSelect = document.getElementById('dashRegion');
+    const stateSelect = document.getElementById('dashState');
     const profileSelect = document.getElementById('dashProfile');
+    const startYearSelect = document.getElementById('dashStartYear');
+    const endYearSelect = document.getElementById('dashEndYear');
+
+    const params = new URLSearchParams(window.location.search);
+    const urlState = params.get('state') || params.get('region');
+    const urlProfile = params.get('profile');
+    const urlStartYear = params.get('start');
+    const urlEndYear = params.get('end');
+
+    if(stateSelect && urlState && dashboardStates[urlState]){
+      stateSelect.value = urlState;
+    }
+    if(profileSelect && urlProfile && dashboardProfiles[urlProfile]){
+      profileSelect.value = urlProfile;
+    }
+    if(startYearSelect && urlStartYear){
+      startYearSelect.value = String(clampDashboardYear(urlStartYear));
+    }
+    if(endYearSelect && urlEndYear){
+      endYearSelect.value = String(clampDashboardYear(urlEndYear));
+    }
+
+    const syncDashboardUrl = (state)=>{
+      if(!state) return;
+      const next = new URLSearchParams(window.location.search);
+      next.delete('region');
+      next.set('state', state.state);
+      next.set('profile', state.profile);
+      next.set('start', String(state.startYear));
+      next.set('end', String(state.endYear));
+      const newUrl = `${window.location.pathname}?${next.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+    };
+
     const renderFromFilters = ()=>{
-      const region = regionSelect ? regionSelect.value : 'us';
+      const stateKey = stateSelect ? stateSelect.value : 'ca';
       const profile = profileSelect ? profileSelect.value : 'average';
-      renderDashboard(region, profile);
+      const startYear = startYearSelect ? startYearSelect.value : DASHBOARD_MIN_YEAR;
+      const endYear = endYearSelect ? endYearSelect.value : DASHBOARD_MAX_YEAR;
+      const state = renderDashboard(stateKey, profile, startYear, endYear);
+      syncDashboardUrl(state);
     };
 
     renderFromFilters();
-    if(regionSelect) regionSelect.addEventListener('change', renderFromFilters);
+    if(stateSelect) stateSelect.addEventListener('change', renderFromFilters);
     if(profileSelect) profileSelect.addEventListener('change', renderFromFilters);
+    if(startYearSelect) startYearSelect.addEventListener('change', renderFromFilters);
+    if(endYearSelect) endYearSelect.addEventListener('change', renderFromFilters);
   }
 
   // wire calculator only if the calculator button exists on this page
   const calcBtn = document.getElementById('calcBtn');
   if(calcBtn){
+    const CALC_STORAGE_KEY = 'calcFormData';
+    const calcFieldIds = [
+      'location','carModel','commute','insurance','campusArea',
+      'price','down','studentIncome','monthlyEssentials','term','rate','fuelPrice'
+    ];
+
+    // Restore saved form values on page load
+    try {
+      const saved = JSON.parse(localStorage.getItem(CALC_STORAGE_KEY) || 'null');
+      if(saved && typeof saved === 'object'){
+        calcFieldIds.forEach(id => {
+          const el = document.getElementById(id);
+          if(el && saved[id] != null) el.value = saved[id];
+        });
+        // Trigger currency label update after restoring location
+        const locationEl = document.getElementById('location');
+        if(locationEl) locationEl.dispatchEvent(new Event('change'));
+      }
+    } catch(e){ /* ignore quota/parse issues */ }
+
     calcBtn.addEventListener('click',()=>{
+    // Persist current form values before computing
+    try {
+      const snap = {};
+      calcFieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) snap[id] = el.value;
+      });
+      localStorage.setItem(CALC_STORAGE_KEY, JSON.stringify(snap));
+    } catch(e){ /* ignore quota issues */ }
+
     const inputs = {
       location: document.getElementById('location').value,
       model: document.getElementById('carModel').value.split(' ')[0],
@@ -371,7 +567,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       inputs.model = full.split(' ')[0].toLowerCase();
     }
 
-  // For EV assume fuelPrice is USD per kWh; if location US and EV, override to ~0.20 USD/kWh default if user left default high
+  // For EV assume fuelPrice is USD per kWh; clamp obvious per-liter defaults when too high
     if(inputs.model==='ev' && inputs.fuelPrice>5) inputs.fuelPrice = 0.20;
 
     const out = computeAnnualCosts(inputs);
@@ -381,8 +577,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const verdict = document.getElementById('verdict');
     breakdown.innerHTML = '';
     affordability.innerHTML = '';
-    // choose currency based on selected location
-    const currencyByLocationLocal = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
+    // choose currency based on selected state
+    const currencyByLocationLocal = { ca: 'USD', tx: 'USD', ny: 'USD', fl: 'USD', il: 'USD' };
     const cur = currencyByLocationLocal[inputs.location] || 'USD';
     [['Loan (annual)',out.annualLoan],['Insurance',out.annualInsurance],['Fuel / Energy',out.annualFuel],['Maintenance',out.maintenance],['Parking / permit',out.annualParking]].forEach(([k,v])=>{
       const li = document.createElement('li');
@@ -426,7 +622,37 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const compareBtn = document.getElementById('compareBtn');
   if(compareBtn){
+    const CVT_STORAGE_KEY = 'cvtFormData';
+    const cvtFieldIds = [
+      'compareLocation','compareCampusArea','compareCarModel','compareCommute',
+      'transitPass','rideshare','compareIncome','compareEssentials','compareFuelPrice'
+    ];
+
+    // Restore saved form values on page load
+    try {
+      const saved = JSON.parse(localStorage.getItem(CVT_STORAGE_KEY) || 'null');
+      if(saved && typeof saved === 'object'){
+        cvtFieldIds.forEach(id => {
+          const el = document.getElementById(id);
+          if(el && saved[id] != null) el.value = saved[id];
+        });
+        // Trigger currency label update after restoring location
+        const locationEl = document.getElementById('compareLocation');
+        if(locationEl) locationEl.dispatchEvent(new Event('change'));
+      }
+    } catch(e){ /* ignore quota/parse issues */ }
+
     compareBtn.addEventListener('click',()=>{
+      // Persist current form values before computing
+      try {
+        const snap = {};
+        cvtFieldIds.forEach(id => {
+          const el = document.getElementById(id);
+          if(el) snap[id] = el.value;
+        });
+        localStorage.setItem(CVT_STORAGE_KEY, JSON.stringify(snap));
+      } catch(e){ /* ignore quota issues */ }
+
       const location = document.getElementById('compareLocation').value;
       const campusArea = document.getElementById('compareCampusArea').value;
       const model = document.getElementById('compareCarModel').value;
@@ -458,7 +684,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
       const results = document.getElementById('compareResults');
       const winner = document.getElementById('compareWinner');
-      const currencyByLocationLocal = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
+      const currencyByLocationLocal = { ca: 'USD', tx: 'USD', ny: 'USD', fl: 'USD', il: 'USD' };
       const cur = currencyByLocationLocal[location] || 'USD';
 
       const diff = Math.abs(carCost - transitAnnual);
@@ -516,7 +742,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       const remainder = income - totalOut;
       const savingsRate = income > 0 ? (savingsGoal / income) * 100 : 0;
 
-      const currencyByLocationLocal = { ch: 'CHF', de: 'EUR', fr: 'EUR', us: 'USD' };
+      const currencyByLocationLocal = { ca: 'USD', tx: 'USD', ny: 'USD', fl: 'USD', il: 'USD' };
       const cur = currencyByLocationLocal[location] || 'USD';
       const results = document.getElementById('budgetResults');
       const breakdown = document.getElementById('budgetBreakdown');

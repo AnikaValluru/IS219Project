@@ -18,6 +18,32 @@ Server features:
 - Falls back to `index.html` to support SPA-style routing.
 
 If you don't have Node.js installed, download it from https://nodejs.org (LTS recommended).
+
+## MCP Testing Workflow (Option 1)
+
+This project now includes Playwright end-to-end smoke tests so you can use MCP-driven automation from Copilot Chat.
+
+Setup and run:
+
+```powershell
+npm install
+npx playwright install chromium
+npm run test:e2e
+```
+
+Key files:
+
+- `playwright.config.js`
+- `tests/chat-smoke.spec.js`
+
+Useful MCP-style prompts in Copilot Chat:
+
+- `Run the Playwright smoke suite and summarize failures with file/line references.`
+- `Use browser automation to open / and verify Dashboard Snapshot creates a bot reply.`
+- `Check whether /alternatives.html keeps full-page chatbot behavior and report regressions.`
+
+Tip: use `npm run test:e2e:ui` for interactive local debugging.
+
 Is Car Ownership Worth It? — Static site (2026)
 
 This is a small static website demonstrating a Swiss international style layout that:

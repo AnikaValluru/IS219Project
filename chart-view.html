@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chart Viewer - Car Cost Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .chart-view-wrap { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .chart-view-panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 30px rgba(22, 18, 17, 0.08); padding: 18px; }
+    .chart-view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .chart-view-head h2 { margin: 0; font-size: 1.15rem; }
+    .chart-view-canvas { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px; overflow: auto; }
+    .chart-view-canvas svg { width: 100%; height: auto; min-height: 300px; display: block; }
+    .chart-view-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+    .chart-view-note { color: var(--muted); margin: 0 0 10px; }
+  </style>
+</head>
+<body>
+  <main class="chart-view-wrap">
+    <section class="chart-view-panel">
+      <div class="chart-view-head">
+        <h2 id="chartViewTitle">Chart Preview</h2>
+      </div>
+      <p class="chart-view-note">This page was opened from a chat chart. Use the button below to continue to the full feature page.</p>
+      <div id="chartViewCanvas" class="chart-view-canvas"></div>
+      <div class="chart-view-actions">
+        <a id="chartViewTarget" class="btn btn-primary" href="index.html">Open full page</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      function readPayload() {
+        var params = new URLSearchParams(window.location.search);
+        var key = params.get('chartKey');
+        if (key) {
+          try {
+            var raw = sessionStorage.getItem(key);
+            if (raw) {
+              sessionStorage.removeItem(key);
+              return JSON.parse(raw);
+            }
+          } catch (e) {
+            // Ignore storage parse issues and fall back to query params.
+          }
+        }
+
+        return {
+          title: params.get('title') || 'Chart Preview',
+          targetHref: params.get('target') || 'index.html',
+          svg: params.get('svg') || ''
+        };
+      }
+
+      var payload = readPayload();
+      var title = document.getElementById('chartViewTitle');
+      var canvas = document.getElementById('chartViewCanvas');
+      var target = document.getElementById('chartViewTarget');
+
+      if (title) title.textContent = payload.title || 'Chart Preview';
+      if (target) target.setAttribute('href', payload.targetHref || 'index.html');
+
+      if (canvas) {
+        if (payload.svg) canvas.innerHTML = payload.svg;
+        else canvas.innerHTML = '<p class="muted">Chart preview unavailable. Return to the chat and generate a new chart.</p>';
+      }
+    })();
+  </script>
+</body>
+</html>

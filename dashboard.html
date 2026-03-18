@@ -26,15 +26,21 @@
 
   <main>
     <section class="container panel">
-      <h3>🔹 Data Dashboard</h3>
-      <p class="muted">Trends: total annual cost of car ownership vs median wages, plus student affordability pressure and cost component mix.</p>
+      <div class="hero prominent">
+        <div class="hero-inner">
+          <h2 class="display-5">Data Dashboard</h2>
+          <p class="lead muted">Trends: total annual cost of car ownership vs median wages, plus student affordability pressure and cost component mix.</p>
+        </div>
+      </div>
 
       <div class="row dashboard-filters mb-4">
-        <label>Region
-          <select id="dashRegion">
-            <option value="us" selected>United States</option>
-            <option value="eu">European Union (avg)</option>
-            <option value="ch">Switzerland</option>
+        <label>State
+          <select id="dashState">
+            <option value="ca" selected>California</option>
+            <option value="tx">Texas</option>
+            <option value="ny">New York</option>
+            <option value="fl">Florida</option>
+            <option value="il">Illinois</option>
           </select>
         </label>
         <label>Student profile
@@ -42,6 +48,34 @@
             <option value="average" selected>Average student</option>
             <option value="frugal">Frugal student</option>
             <option value="commuter">High-commute student</option>
+          </select>
+        </label>
+        <label>Start year
+          <select id="dashStartYear">
+            <option value="2016" selected>2016</option>
+            <option value="2017">2017</option>
+            <option value="2018">2018</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+          </select>
+        </label>
+        <label>End year
+          <select id="dashEndYear">
+            <option value="2016">2016</option>
+            <option value="2017">2017</option>
+            <option value="2018">2018</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025" selected>2025</option>
           </select>
         </label>
       </div>
@@ -72,13 +106,13 @@
       <h4>Main trend</h4>
       <canvas id="costChart" height="120"></canvas>
 
+        <h4 class="mt-4">Latest-year cost breakdown</h4>
+        <div class="chart-compact">
+          <canvas id="componentChart" height="132"></canvas>
+        </div>
+
       <h4 class="mt-4">Affordability trend</h4>
       <canvas id="affordabilityChart" height="120"></canvas>
-
-      <h4 class="mt-4">Latest-year cost breakdown</h4>
-      <div class="chart-compact">
-        <canvas id="componentChart" height="90"></canvas>
-      </div>
 
       <div class="legend-note">Note: sample data for demonstration; replace with local or national datasets for precise analysis and policy decisions.</div>
     </section>
