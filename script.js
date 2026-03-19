@@ -104,20 +104,37 @@ function buildAffordabilityChart(dashboardData){
   const canvas = document.getElementById('affordabilityChart');
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
-  const burdenPct = dashboardData.totalCost.map((cost, i)=> (cost / dashboardData.wages[i]) * 100);
+  const burdenPct = dashboardData.totalCost.map((cost, i)=> {
+    const wage = Math.max(1, dashboardData.wages[i]);
+    return (cost / wage) * 100;
+  });
+  const affordabilityPct = burdenPct.map((pct)=> Math.max(0, 100 - pct));
 
   if(dashboardCharts.affordability) dashboardCharts.affordability.destroy();
   dashboardCharts.affordability = new Chart(ctx, {
-    type:'bar',
+    type:'line',
     data:{
       labels: dashboardData.years,
       datasets:[
         {
-          label:'Ownership cost as % of median wage',
+          label:'Affordability (income left after annual car cost %)',
+          data: affordabilityPct,
+          backgroundColor:'rgba(47,72,88,0.12)',
+          borderColor:'#2f4858',
+          borderWidth:2,
+          fill:true,
+          tension:0.2,
+          pointRadius:3
+        },
+        {
+          label:'Cost burden (% of median wage)',
           data: burdenPct,
-          backgroundColor:'rgba(217,0,27,0.22)',
           borderColor:'#d9001b',
-          borderWidth:1
+          borderDash:[6,4],
+          borderWidth:2,
+          pointRadius:2,
+          fill:false,
+          tension:0.2
         }
       ]
     },
@@ -133,8 +150,9 @@ function buildAffordabilityChart(dashboardData){
       },
       scales:{
         y:{
-          beginAtZero:true,
-          title:{display:true,text:'Percent of annual wage (%)',color:'#5f5a57'},
+          min:0,
+          max:100,
+          title:{display:true,text:'Percent (%)',color:'#5f5a57'},
           ticks:{color:'#7b7471', callback:(v)=> `${Number(v).toFixed(0)}%`},
           grid:{color:'#ece7e3'}
         },
@@ -232,6 +250,7 @@ function renderDashboard(stateKey, profileKey, startYear, endYear){
         {
           label:'Car cost (USD)',
           data:scopedData.totalCost,
+          yAxisID:'yCost',
           borderColor:'#d9001b',
           backgroundColor:'rgba(217,0,27,0.08)',
           pointBackgroundColor:'#d9001b',
@@ -243,6 +262,7 @@ function renderDashboard(stateKey, profileKey, startYear, endYear){
         {
           label:'Median wage (USD)',
           data:scopedData.wages,
+          yAxisID:'yWage',
           borderColor:'#2f4858',
           backgroundColor:'rgba(47,72,88,0.06)',
           pointBackgroundColor:'#2f4858',
@@ -265,12 +285,21 @@ function renderDashboard(stateKey, profileKey, startYear, endYear){
         }
       },
       scales:{
-        y:{
+        yCost:{
           type:'linear',
           position:'left',
-          title:{display:true,text:'USD',color:'#5f5a57'},
+          title:{display:true,text:'Car Cost (USD)',color:'#5f5a57'},
+          suggestedMin:0,
           ticks:{color:'#7b7471', callback:(v)=> formatShortNumber(v)},
           grid:{color:'#ece7e3'}
+        },
+        yWage:{
+          type:'linear',
+          position:'right',
+          title:{display:true,text:'Median Wage (USD)',color:'#5f5a57'},
+          suggestedMin:0,
+          ticks:{color:'#7b7471', callback:(v)=> formatShortNumber(v)},
+          grid:{drawOnChartArea:false}
         },
         x:{
           ticks:{color:'#7b7471'},
