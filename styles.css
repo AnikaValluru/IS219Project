@@ -93,6 +93,51 @@ html,body{
   text-underline-offset:4px;
 }
 
+.main-nav a.nav-login{
+  margin-left:auto;
+  border:1px solid var(--accent);
+  border-radius:999px;
+  padding:6px 12px;
+  line-height:1.1;
+}
+
+.main-nav a.nav-login:hover{
+  background:rgba(217,0,27,0.08);
+}
+
+.main-nav a.nav-login.active{
+  text-decoration:none;
+  background:rgba(217,0,27,0.08);
+}
+
+.auth-user-status{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:2px;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fff;
+}
+
+.auth-user-email{
+  font-size:0.82rem;
+  color:#2f2927;
+  font-weight:600;
+}
+
+.auth-logout-form{
+  margin:0;
+}
+
+.auth-logout-btn{
+  border-width:1px;
+  padding:3px 10px;
+  font-size:0.78rem;
+  line-height:1.3;
+}
+
 main{padding:34px 0 52px}
 
 .hero{
@@ -351,6 +396,178 @@ button:hover{
 .tip-card .card-body ul.preview-list{margin-bottom:0.5rem}
 .tip-card .card-body ul li{margin-bottom:0}
 
+/* Login page */
+.login-wrap{
+  min-height:calc(100vh - 220px);
+  display:flex;
+  align-items:center;
+}
+
+.login-stage{
+  width:100%;
+  display:grid;
+  grid-template-columns:1.1fr 1fr;
+  gap:24px;
+  align-items:stretch;
+}
+
+.login-promo,
+.login-card{
+  background:rgba(255,255,255,0.9);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 10px 28px rgba(22,18,17,0.07);
+}
+
+.login-promo{
+  padding:36px;
+  background:
+    linear-gradient(165deg, rgba(217,0,27,0.11), rgba(255,255,255,0.9)),
+    rgba(255,255,255,0.9);
+  animation:login-reveal .45s ease;
+}
+
+.login-kicker{
+  display:inline-block;
+  margin:0 0 10px;
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid rgba(217,0,27,0.25);
+  color:var(--accent);
+  font-weight:700;
+  font-size:0.78rem;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+
+.login-promo h2,
+.login-card h2{
+  margin:0 0 10px;
+  font-family:"Source Serif 4", Georgia, serif;
+  font-size:2rem;
+  line-height:1.15;
+}
+
+.login-benefits{
+  margin:20px 0 0;
+  padding-left:18px;
+  color:#2c2624;
+  display:grid;
+  gap:10px;
+}
+
+.login-card{
+  padding:30px;
+  animation:login-reveal .55s ease;
+}
+
+.login-form{
+  margin-top:16px;
+  display:grid;
+  gap:14px;
+}
+
+.login-error{
+  margin:10px 0 0;
+  padding:10px 12px;
+  border-radius:10px;
+  background:rgba(217,0,27,0.1);
+  border:1px solid rgba(217,0,27,0.25);
+  color:#7f0012;
+  font-weight:600;
+}
+
+.form-field label{
+  margin-bottom:4px;
+}
+
+.form-field input[type="email"],
+.form-field input[type="password"]{
+  width:100%;
+  padding:11px 12px;
+  border-radius:10px;
+  border:1px solid #d9d2cd;
+  background:#fff;
+  transition:border-color .18s ease, box-shadow .18s ease;
+}
+
+.form-field input[type="email"]:focus,
+.form-field input[type="password"]:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(217,0,27,0.13);
+}
+
+.field-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.forgot-link,
+.login-meta a{
+  color:var(--accent);
+  font-weight:600;
+  text-decoration:none;
+}
+
+.forgot-link:hover,
+.login-meta a:hover{
+  color:var(--accent-deep);
+  text-decoration:underline;
+}
+
+.remember-row{
+  margin-top:-2px;
+}
+
+.remember-check{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:500;
+  color:#3a3230;
+}
+
+.remember-check input{
+  width:16px;
+  height:16px;
+  accent-color:var(--accent);
+}
+
+.login-submit{
+  width:100%;
+  margin-top:4px;
+  padding:12px 14px;
+  border-radius:11px;
+  font-weight:700;
+}
+
+.logout-form{
+  margin-top:12px;
+}
+
+.login-logout{
+  width:100%;
+}
+
+.login-meta{
+  margin:16px 0 0;
+  color:var(--muted);
+}
+
+@keyframes login-reveal{
+  from{
+    opacity:0;
+    transform:translateY(10px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
 .site-footer{
   border-top:1px solid var(--line);
   padding:18px 0 26px;
@@ -369,8 +586,25 @@ button:hover{
     width:100%;
   }
 
+  .main-nav a.nav-login{
+    margin-left:0;
+  }
+
+  .auth-user-status{
+    margin-top:0;
+  }
+
   .hero,
   .panel{padding:30px}
+
+  .login-stage{
+    grid-template-columns:1fr;
+  }
+
+  .login-promo,
+  .login-card{
+    padding:26px;
+  }
 }
 
 @media (max-width:720px){
@@ -379,6 +613,21 @@ button:hover{
   .panel{padding:22px}
   .hero-ctas .btn{margin-bottom:8px}
   .lead{max-width:100%}
+
+  .auth-user-status{
+    width:100%;
+    justify-content:center;
+    border-radius:12px;
+  }
+
+  .auth-user-email{
+    font-size:0.78rem;
+  }
+
+  .login-promo h2,
+  .login-card h2{
+    font-size:1.7rem;
+  }
 }
 
 /* ── Chatbot widget ─────────────────────────────────────────────────────────── */

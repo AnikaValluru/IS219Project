@@ -1,0 +1,17 @@
+[
+  {
+    "email": "student@is219.local",
+    "passwordHash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+    "createdAt": "2026-03-31T15:29:03.508Z"
+  },
+  {
+    "email": "persist1774970965@test.local",
+    "passwordHash": "0bbeae2a509a9790b8d1965b3d08afdb3fb5d34bab2d691989c9cc582d62cd33",
+    "createdAt": "2026-03-31T15:29:25.810Z"
+  },
+  {
+    "email": "arv33@njit.edu",
+    "passwordHash": "ee151471455feab986f1fd2f94294a96a67d0a65ae21972d0773b482b7baec6e",
+    "createdAt": "2026-03-31T15:30:07.028Z"
+  }
+]
