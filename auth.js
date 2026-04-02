@@ -68,84 +68,6 @@
     headerContainer.appendChild(badge);
   }
 
-  function ensureAccountsNavLink() {
-    var nav = document.querySelector('.main-nav');
-    if (!nav || nav.querySelector('a[data-auth-link="accounts"]')) {
-      return;
-    }
-
-    var loginLink = nav.querySelector('a.nav-login');
-    var accounts = document.createElement('a');
-    accounts.href = 'accounts.html';
-    accounts.textContent = 'User Accounts';
-    accounts.setAttribute('data-auth-link', 'accounts');
-
-    if (window.location.pathname.toLowerCase().endsWith('/accounts.html') || window.location.pathname.toLowerCase() === '/accounts.html') {
-      accounts.classList.add('active');
-    }
-
-    if (loginLink && loginLink.parentNode === nav) {
-      nav.insertBefore(accounts, loginLink);
-    } else {
-      nav.appendChild(accounts);
-    }
-  }
-
-  function formatCreatedDate(isoValue) {
-    if (!isoValue) {
-      return 'Unknown';
-    }
-
-    var dt = new Date(isoValue);
-    if (Number.isNaN(dt.getTime())) {
-      return 'Unknown';
-    }
-
-    return dt.toLocaleString();
-  }
-
-  function renderAccountsPage() {
-    var path = window.location.pathname.toLowerCase();
-    var isAccountsPage = path.endsWith('/accounts.html') || path === '/accounts.html';
-    if (!isAccountsPage) {
-      return;
-    }
-
-    var summaryEl = document.getElementById('accounts-summary');
-    var tableBody = document.getElementById('accounts-table-body');
-    if (!summaryEl || !tableBody) {
-      return;
-    }
-
-    fetch('/api/users', { credentials: 'same-origin' })
-      .then(function (res) {
-        if (!res.ok) {
-          throw new Error('Failed to load accounts');
-        }
-        return res.json();
-      })
-      .then(function (data) {
-        var users = Array.isArray(data.users) ? data.users : [];
-        summaryEl.textContent = 'Total users: ' + users.length;
-
-        if (!users.length) {
-          tableBody.innerHTML = '<tr><td colspan="2" class="muted">No users found.</td></tr>';
-          return;
-        }
-
-        tableBody.innerHTML = users.map(function (user) {
-          return '<tr>' +
-            '<td>' + escapeHtml(user.email || '') + '</td>' +
-            '<td>' + escapeHtml(formatCreatedDate(user.createdAt)) + '</td>' +
-            '</tr>';
-        }).join('');
-      })
-      .catch(function () {
-        summaryEl.textContent = 'Unable to load user accounts.';
-        tableBody.innerHTML = '<tr><td colspan="2" class="muted">Try refreshing the page.</td></tr>';
-      });
-  }
-
   function clearLoginQueryError() {
     var params = new URLSearchParams(window.location.search);
     if (!params.get('error')) {
@@ -256,9 +178,7 @@
           return;
         }
 
-        ensureAccountsNavLink();
         injectLoggedInBadge(data.email || 'user');
-        renderAccountsPage();
       })
       .catch(function () {
         // Keep page functional even when auth status cannot be fetched.

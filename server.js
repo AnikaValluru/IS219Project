@@ -13,6 +13,7 @@ const users = new Map();
 const SESSION_COOKIE = 'auth_session';
 const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
 const ALLOW_ANY_LOGIN = process.env.ALLOW_ANY_LOGIN === 'true';
+const PRIVATE_STATIC_PATHS = new Set(['/accounts.html', '/users.json']);
 
 const AUTH_EMAIL = process.env.DEMO_LOGIN_EMAIL || 'student@is219.local';
 const AUTH_PASSWORD = process.env.DEMO_LOGIN_PASSWORD || 'password123';
@@ -161,6 +162,10 @@ function sanitizeNextPath(candidatePath) {
 function requiresAuth(req) {
   const requestPath = req.path.toLowerCase();
 
+  if (PRIVATE_STATIC_PATHS.has(requestPath)) {
+    return false;
+  }
+
   if (
     requestPath === '/login.html' ||
     requestPath === '/create-user.html' ||
@@ -184,6 +189,11 @@ function requiresAuth(req) {
 }
 
 app.use((req, res, next) => {
+  const requestPath = req.path.toLowerCase();
+  if (PRIVATE_STATIC_PATHS.has(requestPath)) {
+    return res.status(404).send('Not found');
+  }
+
   const session = getActiveSession(req);
   req.user = session;
 
@@ -279,22 +289,6 @@ app.get('/api/me', (req, res) => {
   return res.json({
     authenticated: true,
     email: req.user.email,
-  });
-});
-
-app.get('/api/users', (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ authenticated: false });
-  }
-
-  const userList = Array.from(users.entries()).map(([email, value]) => ({
-    email,
-    createdAt: value.createdAt,
-  }));
-
-  return res.json({
-    count: userList.length,
-    users: userList,
   });
 });
 
