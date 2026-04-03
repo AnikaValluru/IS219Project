@@ -7,6 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const STATIC_DIR = path.join(__dirname);
 const USERS_FILE = path.join(__dirname, 'users.json');
+const MAX_PORT_ATTEMPTS = 10;
 
 const sessions = new Map();
 const users = new Map();
@@ -310,6 +311,22 @@ app.get('*', (req, res) => {
   return res.redirect(`/login.html?next=${nextPath}`);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+function listenOnPort(port, attempt = 0) {
+  const server = app.listen(port, () => {
+    console.log(`Server listening on http://localhost:${port}`);
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE' && attempt < MAX_PORT_ATTEMPTS && !process.env.PORT) {
+      const nextPort = port + 1;
+      console.log(`Port ${port} is busy, trying ${nextPort}...`);
+      listenOnPort(nextPort, attempt + 1);
+      return;
+    }
+
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+listenOnPort(PORT);
